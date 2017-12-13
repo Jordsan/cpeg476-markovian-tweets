@@ -6,6 +6,9 @@
 #include <map>
 #include <vector>
 #include <algorithm> 
+#include <string>
+#include "tweet-service.h"
+
 using namespace std;
 
 void removeCharsFromString(string &str, const char* charsToRemove) {
@@ -24,7 +27,7 @@ map<string, map<string, int> > readFile(string input) {
 
     string currWord = "";
     string prevWord = "";
-    string pattern = "().$*%'`&#@=+{}[]|\\;:><~ ";
+    string pattern = "().$*%'`&#@=+{}[]|\\;:><~//";
     while (file >> currWord) {
         bool check = false;
         
@@ -59,10 +62,12 @@ vector<string> generateTweets(map<string, map<string, int> > input){
     
     for (auto& x: input) {
         for (auto& y: x.second) {
-            pairList.push_back(make_pair(x.first, make_pair(y.first, y.second)));
+            if (y.first.find("http") == string::npos && x.first.find("http") == string::npos) {
+                pairList.push_back(make_pair(x.first, make_pair(y.first, y.second)));
+            }
         }
     }
-    
+
     sort(pairList.begin(), pairList.end(), [=](pair<string, pair<string, int> > a, pair<string, pair<string, int> > b){
         return a.second.second > b.second.second;
     });
@@ -81,19 +86,34 @@ vector<string> generateTweets(map<string, map<string, int> > input){
 }
 
 int main () {
+    string username;
+    cout << endl << "Enter your desired Twitter username: ";
+    cin >> username;
+    
+    cout << endl << "Grabbing recent tweets from " << username << " ..." << endl;
+    getTweets(username);
+
     map<string, map<string, int> > pairMap;
     pairMap = readFile("input.txt");
     
     int number = 0;
     vector<string> tweets = generateTweets(pairMap);
     
-    cout << "Enter desired number of tweets : ";
+    cout << endl << "Enter desired number of tweets to generate or -1 to quit: ";
     cin >> number;
     
+    if (number == -1){
+        exit(0);
+    }
+    
     while (number > tweets.size()){
-        cout << "Error: cannot generate " << number << " tweets with given text" << endl;
-        cout << "Enter desired number of tweets : ";
+        cout << endl << "Error: cannot generate " << number << " tweets with given text" << endl;
+        cout << endl << "Enter desired number of tweets to generate or -1 to quit: ";
         cin >> number;
+        
+        if (number == -1){
+            exit(0);
+        }
     }
     
     cout << endl;
